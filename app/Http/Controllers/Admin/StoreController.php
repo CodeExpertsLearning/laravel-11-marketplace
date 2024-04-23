@@ -3,69 +3,56 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreFormRequest;
 use App\Models\Store;
 use Illuminate\Http\Request;
 
 class StoreController extends Controller
 {
-    public function index()
+    public function __construct(private Store $store)
     {
-        //find: se nao encontrar retorna null / findOrFail: se nao encontra lança uma exception: Gera um 404
-        // $stores = Store::findOrFail(20);
-        $stores = Store::all();
-
-        return view('exemplo', compact('stores')); // php.net/compact | php.net/extract
     }
 
-    public function store()
+    public function index()
     {
-        // //Criar: Active Record
-        // $store = new Store();
-        // $store->name = 'Loja Exemplo 2';
-        // $store->description = 'Descriçao da Loja';
-        // $store->about = 'Contexto da Loja';
-        // $store->phone = '+559923232323';
-        // $store->whatsapp = '+559923232323';
+        $stores = $this->store->paginate(10);
 
-        // $store->save();
+        return view('admin.stores.index', compact('stores')); // php.net/compact | php.net/extract
+    }
 
-        // dump($store);
+    public function create()
+    {
+        return view('admin.stores.create');
+    }
 
-        //Atualizar: Active Record
-        // $store = Store::findOrFail(7);
+    public function store(StoreFormRequest $request)
+    {
+        $this->store->create($request->all());
 
-        // $store->name = 'Loja Exemplo 2 Editado...';
+        return redirect()->route('admin.stores.index');
+    }
 
-        // $store->save();
+    public function edit(string $store)
+    {
+        $store = $this->store->findOrFail($store);
 
-        // dump($store);
+        return view('admin.stores.edit', compact('store'));
+    }
 
+    public function update(string $store, StoreFormRequest $request)
+    {
+        $store = $this->store->findOrFail($store);
 
-        //=================================================
+        $store->update($request->all());
 
-        //Create: Mass Assignment...
+        return redirect()->back();
+    }
 
-        // $store = Store::create([
-        //     'name' => 'Loja Exemplo 2',
-        //     'description' => 'Descriçao da Loja',
-        //     'about' => 'Contexto da Loja',
-        //     'phone' => '+559923232323',
-        //     'whatsapp' => '+559923232323',
-        // ]);
+    public function destroy(string $store)
+    {
+        $store = Store::findOrFail($store);
+        $store->delete();
 
-        // dump($store);
-
-        // $store = Store::findOrFail(9);
-        // $store->update([
-        //     'name' => 'Loja Exemplo 2 Editado...',
-        // ]);
-
-        // dump($store);
-
-        //Delete
-        // $store = Store::findOrFail(9);
-        // $store->delete();
-
-        // dump($store);
+        return redirect()->back();
     }
 }
