@@ -11,6 +11,8 @@ class Store extends Model
 {
     use HasFactory;
 
+    protected $withCount = ['products'];
+
     protected $fillable = [
         'name', 'description', 'about', 'phone', 'whatsapp'
     ];

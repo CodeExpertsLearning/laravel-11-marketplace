@@ -3,63 +3,76 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductFormRequest;
+use App\Models\Category;
+use App\Models\Product;
+use App\Models\Store;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct(private Product $product)
+    {
+    }
+
     public function index()
     {
-        //
+        $products = $this->product->paginate(10);
+        return view('admin.products.index', compact('products')); // php.net/compact | php.net/extract
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function create(Store $store, Category $category)
     {
-        //
+        $stores = $store->all(['id', 'name']);
+        $categories = $category->all(['id', 'name']);
+
+        return view('admin.products.create', compact('stores', 'categories'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(ProductFormRequest $request, Store $store)
     {
-        //
+        $store = auth()->user()->store;
+        $product = $store->products()->create($request->except('store', 'categories'));
+
+        if ($request->categories) $product->categories()->sync($request->categories);
+
+        // $data = $request->all();
+        // $data['store_id'] = $data['store'];
+        //$this->product->create($data)
+
+        // $product = $this->product->create($data);
+        // $product->store()->associate($store->findOrFail($request->store));
+        // $product->save();
+
+        return redirect()->route('admin.products.index');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function edit(string $product, Store $store, Category $category)
     {
-        //
+        $stores = $store->all(['id', 'name']);
+        $categories = $category->all(['id', 'name']);
+
+        $product = $this->product->findOrFail($product);
+
+        return view('admin.products.edit', compact('product', 'stores', 'categories'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(string $product, ProductFormRequest $request)
     {
-        //
+        $product = $this->product->findOrFail($product);
+
+        $product->update($request->except('categories'));
+
+        $product->categories()->sync($request->categories);
+
+        return redirect()->back();
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy(string $store)
     {
-        //
-    }
+        $store = $this->product->findOrFail($store);
+        $store->delete();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->back();
     }
 }
